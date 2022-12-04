@@ -252,7 +252,30 @@ function delete()
 
 function getHelp()
 {
-  echo "help"
+  echo "backup create <FROM> <TO> <PATTERN> <PROJ_NAME>";
+  echo "FROM - директория, из которой берутся файлы для резервного копирования";
+  echo "TO - директория, в которую помещать созданный архив";
+  echo "PATTERN - шаблон, по которому делать резервную копию, берется в кавычки. Звездочка экранируется.";
+  echo "PROJ_NAME - имя вновь создаваемого проекта резервного копирования";
+  echo "";
+  echo "backup make <PROJ_NAME>";
+  echo "Создает копию заданного проекта резерного копирования.";
+  echo "";
+  echo "backup list";
+  echo "Показать спиcок созданных проектов резервного копирования";
+  echo "";
+  echo "backup limit <COUNT> <PROJ_NAME>";
+  echo "Ограничить максимальное количество архивов. Если 0 - ограничений нет";
+  echo "";
+  echo "backup plan <mode> <PROJ_NAME>";
+  echo "запланировать резервное копирование.";
+  echo "mode -d - ежедневно в 17:00";
+  echo "mode -w - еженедельно";
+  echo "mode -m - ежемесячно";
+  echo "mode -0 - отменить периодическое копирование";
+  echo "";
+  echo "backup delete <mode> <PROJ_NAME>";
+  echo "Удаляет проект резервного копирования";
 }
 
 if [ ! -d ~/.config/anytask_backup ]; then
@@ -277,9 +300,9 @@ elif [[ "$1" == "list" ]]; then
   cat ~/.config/anytask_backup/backup.conf;
   exit 0;
 elif [[ "$1" == "--help" ]]; then
-  getHelp;
+  getHelp;  
 else
-  echo "Type error. Command not found try backup --help for info";
+  echo "Type error. Command not found try backup --help for info.";
   exit 1;
 fi
 exit 0;

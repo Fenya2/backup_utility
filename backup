@@ -1,5 +1,17 @@
 #! /bin/bash
 
+function check_for_limit()
+{
+  record=$1;
+  mode="$(echo ${record} | awk '{print $3}')";
+  output_dir="$(echo ${record} | awk '{print $5}')";
+  
+  if [ ! "${mode}" -eq 0 ]; then
+    ls -lt ${output_dir} | grep -P ".tar$" | wc -l;
+  fi
+}
+
+
 function make_backup() #name
 {
   name=$1;
@@ -26,6 +38,8 @@ function make_backup() #name
     echo "Error. Output directory is not exist.";
     exit 1;
   fi
+  
+  check_for_limit "${record}";
   
   tar_name=$(date +"%Y%m%d_%H%M%S").tar;
   if ! tar -cf ${output_dir}${tar_name} ${input_dir}${pattern} 2>> ./errors.log; then
@@ -165,19 +179,65 @@ function plan() #mode name
   esac
   
   echo "Type error. plan mode is incorrect."
-  exit 1;
-  
-  echo "CODE";
+  exit 1;  
 }
 
 function limit()
 {
-  echo "limit"
+  mode=$1;
+  name=$2;
+  if [ -z "${mode}" ]; then
+    echo "Type error. Missing arg 'mode'.";
+    exit 1;
+  elif [ -z "${name}" ]; then  
+    echo "Type error. Missing arg 'name'.";
+    exit 1;
+  fi
+  
+  record="$(awk -v backup_name=${name} 'BEGIN {res=0} {if ($1 == backup_name) res=$0} END {print res}' ~/.config/anytask_backup/backup.conf)";
+  if test "${record}" -eq 0 2> /dev/null; then
+    echo "Type error. This backup not found. Create it using 'backup create' command.";
+    exit 1;
+  fi
+  
+  test "${mode}" -eq "${mode}" 2> /dev/null;
+  if [ ! "$?" -eq 0 ]; then
+    echo "Type error. Arg mode must be integer";
+    exit 1;
+  fi
+  awk -v name="${name}" -v mode="${mode}" '{if ($1==name) $3=mode} {print $0}' ~/.config/anytask_backup/backup.conf > newConf.tmp;
+  mv newConf.tmp ~/.config/anytask_backup/backup.conf;
+  exit 0;
 }
 
 function delete()
 {
-  echo "delete"
+  name=$1;
+  if [ -z "${name}" ]; then  
+    echo "Type error. Missing arg 'name'.";
+    exit 1;
+  fi
+  
+  record="$(awk -v backup_name=${name} 'BEGIN {res=0} {if ($1 == backup_name) res=$0} END {print res}' ~/.config/anytask_backup/backup.conf)";
+  if test "${record}" -eq 0 2> /dev/null; then
+    echo "Type error. This backup not found. Create it using 'backup create' command.";
+    exit 1;
+  fi
+  
+  
+  echo "Список крон";
+  crontab -l > crontab.tmp;
+  echo "2";
+  grep -v -P "${name}$" crontab.tmp > crontab2.tmp;
+  echo "новый конфиг";
+  grep -v -P "^${name}" ~/.config/anytask_backup/backup.conf > newConf.tmp;
+  
+  crontab crontab2.tmp;
+  
+  mv newConf.tmp ~/.config/anytask_backup/backup.conf;
+  rm crontab2.tmp;
+  rm crontab.tmp;
+  exit 0;
 }
 
 function getHelp()
@@ -200,13 +260,16 @@ elif [[ "$1" == "delete" ]]; then
   delete $2
 elif [[ "$1" == "make" ]]; then
   make_backup $2;
+elif [[ "$1" == "limit" ]]; then
+  # count name
+  limit $2 $3;
 elif [[ "$1" == "list" ]]; then
   cat ~/.config/anytask_backup/backup.conf;
   exit 0;
 elif [[ "$1" == "--help" ]]; then
   getHelp;
 else
-  echo "Type error. try backup --help for info";
+  echo "Type error. Command not found try backup --help for info";
   exit 1;
 fi
 exit 0;

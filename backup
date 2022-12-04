@@ -100,29 +100,66 @@ function plan() #mode name
   case "${mode}" in
   
   "-d" | "--daily" )
-  crontan -l > crontab.tmp;
-  #awk -v name=${name} '{if ($1==name) $6="-d"} {print $0}}' ;
-  #echo "0 17 * * ${script_name} ${name}" >> crontab.tmp;
-  #awk -v name=${name} '{if ($1==name) $2="-d"} {print $0}}' ~/.config/anytask_backup/backup.conf;
-  #crontab 
+  crontab -l > crontab.tmp;
+  cat crontab.tmp | grep -v -P "${name}$" > crontab2.tmp;
+  echo "0 17 * * * ${script_name} make ${name}" >> crontab2.tmp;
   
+  awk -v name="${name}" '{if ($1==name) $2="d"} {print $0}' ~/.config/anytask_backup/backup.conf > newConf.tmp;
   
-  echo "${record}";
+  crontab crontab2.tmp;
+  mv newConf.tmp ~/.config/anytask_backup/backup.conf;
+  
+  rm crontab2.tmp;
+  rm crontab.tmp;
+  
   exit 0;
   ;;
 
   "-w" | "--weekly" )
-  echo "weekly script";
+  
+  crontab -l > crontab.tmp;
+  cat crontab.tmp | grep -v -P "${name}$" > crontab2.tmp;
+  echo "0 17 * * 0 ${script_name} make ${name}" >> crontab2.tmp;
+  
+  awk -v name="${name}" '{if ($1==name) $2="w"} {print $0}' ~/.config/anytask_backup/backup.conf > newConf.tmp;
+  
+  crontab crontab2.tmp;
+  mv newConf.tmp ~/.config/anytask_backup/backup.conf;
+  
+  rm crontab2.tmp;
+  rm crontab.tmp;
+  
   exit 0;
   ;;
   
   "-m" | "--monthly" )
-  echo "monthly script";
+  
+  crontab -l > crontab.tmp;
+  cat crontab.tmp | grep -v -P "${name}$" > crontab2.tmp;
+  echo "0 17 1 * * ${script_name} make ${name}" >> crontab2.tmp;
+  
+  awk -v name="${name}" '{if ($1==name) $2="m"} {print $0}' ~/.config/anytask_backup/backup.conf > newConf.tmp;
+  
+  crontab crontab2.tmp;
+  mv newConf.tmp ~/.config/anytask_backup/backup.conf;
+  
+  rm crontab2.tmp;
+  rm crontab.tmp;
   exit 0;
   ;;
   
   "-0" | "--off" )
-  echo "of script";
+  
+  crontab -l > crontab.tmp;
+  cat crontab.tmp | grep -v -P "${name}$" > crontab2.tmp;
+  
+  awk -v name="${name}" '{if ($1==name) $2="0"} {print $0}' ~/.config/anytask_backup/backup.conf > newConf.tmp;
+  
+  crontab crontab2.tmp;
+  mv newConf.tmp ~/.config/anytask_backup/backup.conf;
+  
+  rm crontab2.tmp;
+  rm crontab.tmp;
   exit 0;
   ;;
   esac

@@ -16,7 +16,6 @@ function check_for_limit()
       rm ${files_to_delete};
       rm ${files_to_delete_sums};
       cd -;
-      exit 0;
     fi
   fi
 }
@@ -306,3 +305,4 @@ else
   exit 1;
 fi
 exit 0;
+
